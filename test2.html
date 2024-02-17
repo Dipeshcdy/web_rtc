@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Viewer</title>
+</head>
+<body>
+    <h1>Video Viewer</h1>
+    <video id="remoteVideo" autoplay style="max-width: 400px;"></video>
+    <input type="text" id="offer">
+    <button onclick="def()">connect</button>
+    <script>
+        const remoteVideo = document.getElementById('remoteVideo');
+
+        // ws.addEventListener('message', async event => {
+        //     const message = JSON.parse(event.data);
+        //     if (message.type === 'offer') {
+        //         await handleOffer(message.offer);
+        //     } 
+        //     // else if (message.type === 'candidate') {
+        //     //     handleCandidate(message.candidate);
+        //     // }
+        // });
+       
+        async function def()
+        {
+            console.log('hi');
+            let offer=JSON.parse(document.getElementById('offer').value);
+            await handleOffer(offer);
+        }
+
+        async function handleOffer(offer) {
+            console.log('pugyo')
+            try {
+                const peerConnection = new RTCPeerConnection();
+                const stream = new MediaStream();
+
+                peerConnection.addEventListener('track', event => {
+                    stream.addTrack(event.track);
+                    remoteVideo.srcObject = stream;
+                });
+
+                await peerConnection.setRemoteDescription(offer);
+
+                const answer = await peerConnection.createAnswer();
+                await peerConnection.setLocalDescription(answer);
+
+                // ws.send(JSON.stringify({ type: 'answer', answer: answer }));
+
+                // peerConnection.addEventListener('icecandidate', event => {
+                //     if (event.candidate) {
+                //         ws.send(JSON.stringify({ type: 'candidate', candidate: event.candidate }));
+                //     }
+                // });
+            } catch (error) {
+                console.error('Error handling offer:', error);
+            }
+        }
+
+      
+    </script>
+</body>
+</html>

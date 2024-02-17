@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebRTC Video Chat</title>
+</head>
+<body>
+    <h1>WebRTC Video Chat</h1>
+    <div>
+        <video id="localVideo" autoplay muted style="max-width: 200px;"></video>
+        <video id="remoteVideo" autoplay style="max-width: 200px;"></video>
+    </div>
+    <button id="startBtn">Start Video Chat</button>
+    <button id="stopBtn">Stop Video Chat</button>
+
+    <script>
+        let localStream;
+        let peerConnection;
+
+        const localVideo = document.getElementById('localVideo');
+        const remoteVideo = document.getElementById('remoteVideo');
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+
+        // Function to start the video chat
+        async function startVideoChat() {
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                localVideo.srcObject = localStream;
+
+                peerConnection = new RTCPeerConnection();
+                peerConnection.addStream(localStream);
+
+                peerConnection.ontrack = event => {
+                    remoteVideo.srcObject = event.streams[0];
+                };
+
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+
+                console.log('Video chat started.');
+            } catch (error) {
+                console.error('Error starting video chat:', error);
+            }
+        }
+
+        // Function to stop the video chat
+        function stopVideoChat() {
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+                localVideo.srcObject = null;
+            }
+
+            if (peerConnection) {
+                peerConnection.close();
+                remoteVideo.srcObject = null;
+            }
+
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+
+            console.log('Video chat stopped.');
+        }
+
+        // Event listeners
+        startBtn.addEventListener('click', startVideoChat);
+        stopBtn.addEventListener('click', stopVideoChat);
+
+        // Cleanup peer connection on page unload
+        window.addEventListener('beforeunload', () => {
+            if (peerConnection) {
+                peerConnection.close();
+            }
+        });
+    </script>
+</body>
+</html>

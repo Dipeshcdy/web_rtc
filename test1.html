@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera Broadcast</title>
+</head>
+<body>
+    <h1>Camera Broadcast</h1>
+    <video id="localVideo" autoplay muted style="max-width: 400px;"></video>
+
+    <input type="text" id="offer">
+
+    <script>
+        const localVideo = document.getElementById('localVideo');
+
+        async function startBroadcast() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                localVideo.srcObject = stream;
+
+                const peerConnection = new RTCPeerConnection();
+
+                stream.getTracks().forEach(track => peerConnection.addTrack(track, stream));
+
+
+             
+
+                peerConnection.addEventListener('icecandidate', event => {
+                    if (event.candidate) {
+                        console.log("candidate");
+                        console.log(event.candidate)
+                        // ws.send(JSON.stringify({ type: 'candidate', candidate: event.candidate }));
+                    }
+                });
+
+                // Send SDP offer when connection is established
+                peerConnection.addEventListener('negotiationneeded', async () => {
+                    try {
+                        const offer = await peerConnection.createOffer();
+                        await peerConnection.setLocalDescription(offer);
+                        document.getElementById('offer').value=JSON.stringify(offer);
+                        console.log(offer);
+                        // ws.send(JSON.stringify({ type: 'offer', offer: offer }));
+                    } catch (error) {
+                        console.error('Error creating offer:', error);
+                    }
+                });
+            } catch (error) {
+                console.error('Error starting broadcast:', error);
+            }
+        }
+
+        startBroadcast();
+    </script>
+</body>
+</html>
